@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/lpernett/godotenv"
 	log "github.com/sirupsen/logrus"
@@ -19,7 +20,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func DBConnect() *mongo.Collection{
+// type Database interface{
+// 	Collection(ctx context.Context, dbName, colName string) (*mongo.Collection, error)
+
+// 	Context context.Context
+
+// }
+
+
+func DBConnect() (*mongo.Collection , context.Context){
+
+
 	err := godotenv.Load(".env")
 	if err != nil {
 		// TODO adding the current file name so that it can found the current error file 
@@ -35,6 +46,12 @@ func DBConnect() *mongo.Collection{
 	if err != nil {
 	 log.Fatal(err)
 	}
+
+
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	
+	defer client.Disconnect(ctx)
+
 	//check connection
 	err = client.Ping(context.Background(), nil)
 	if err != nil {
@@ -48,7 +65,7 @@ func DBConnect() *mongo.Collection{
 
 	fmt.Println("Connected to db")
 
-	return collection
+	return collection, ctx
 
 }
 

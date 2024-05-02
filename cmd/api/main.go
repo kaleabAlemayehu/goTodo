@@ -20,16 +20,26 @@ func main(){
 
 	}
 	
-	database.DBConnect()
+	collection , context := database.DBConnect()
 
 
 	r := gin.Default()
 	
-	r.GET("/", handler.GetAllTodo)
-	r.GET("/:id",handler.GetTodo)
-	r.POST("/", handler.AddTodo)
-	r.PATCH("/:id", handler.UpdateTodo)
-	r.DELETE("/:id", handler.DeleteTodo)
+	r.GET("/", func(ctx *gin.Context) {
+		handler.GetAllTodo(ctx, collection, context);
+	})
+	r.GET("/:id",func(ctx *gin.Context){
+		handler.GetTodo(ctx, collection, context)
+	})
+	r.POST("/", func (ctx *gin.Context)  {
+		handler.AddTodo(ctx, collection, context)
+	})
+	r.PATCH("/:id", func(ctx *gin.Context){
+		handler.UpdateTodo(ctx, collection, context)
+	})
+	r.DELETE("/:id", func(ctx *gin.Context){
+		handler.DeleteTodo(ctx, collection, context)
+	})
 
 	port := os.Getenv("PORT")
 	fmt.Printf("the port is %v:",port)
