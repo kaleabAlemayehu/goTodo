@@ -13,7 +13,8 @@ func main() {
 	sm := http.NewServeMux()
 
 	user := handler.NewUser(l)
+	todo := handler.NewTodo(l)
 	sm.Handle("/user/", user)
-
+	sm.Handle("/todo/", todo)
 	http.ListenAndServe(":9000", sm)
 }
