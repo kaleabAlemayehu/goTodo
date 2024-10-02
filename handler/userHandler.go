@@ -44,7 +44,13 @@ func (user *Users) getAllUsers(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 func (user *Users) createUser(rw http.ResponseWriter, r *http.Request) {
+	newUser := &data.User{}
+	err := newUser.FromJson(r.Body)
 
+	if err != nil {
+		http.Error(rw, "Unable to Unmarshal from json", http.StatusBadRequest)
+	}
+	data.AddUser(newUser)
 }
 
 func (user *Users) updateUser(rw http.ResponseWriter, r *http.Request) {

@@ -20,11 +20,19 @@ func GetUsers() *Users {
 	return &users
 }
 
+func AddUser(newUser *User) {
+	id := getNextId()
+	newUser.Id = id
+	users = append(users, newUser)
+}
 func (users *Users) ToJson(w io.Writer) error {
-
 	encoder := json.NewEncoder(w)
 	return encoder.Encode(users)
+}
 
+func (user *User) FromJson(r io.Reader) error {
+	decoder := json.NewDecoder(r)
+	return decoder.Decode(user)
 }
 
 var users = Users{
@@ -49,4 +57,8 @@ var users = Users{
 func hash(input string) string {
 	//TODO impliment hash
 	return input
+}
+
+func getNextId() int {
+	return users[len(users)-1].Id + 1
 }
