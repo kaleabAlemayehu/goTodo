@@ -3,17 +3,19 @@ package handler
 import (
 	"log"
 	"net/http"
+
+	"github.com/kaleabAlemayehu/goTodo/data"
 )
 
-type User struct {
+type Users struct {
 	Logger *log.Logger
 }
 
-func NewUser(l *log.Logger) *User {
-	return &User{l}
+func NewUser(l *log.Logger) *Users {
+	return &Users{l}
 }
 
-func (user *User) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (user *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		user.getAllUsers(rw, r)
 		return
@@ -33,16 +35,21 @@ func (user *User) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusMethodNotAllowed)
 }
 
-func (user *User) getAllUsers(rw http.ResponseWriter, r *http.Request) {
+func (user *Users) getAllUsers(rw http.ResponseWriter, r *http.Request) {
+	users := data.GetUsers()
+
+	err := users.ToJson(rw)
+	if err != nil {
+		http.Error(rw, "Unable to Marshal to json", http.StatusInternalServerError)
+	}
+}
+func (user *Users) createUser(rw http.ResponseWriter, r *http.Request) {
 
 }
-func (user *User) createUser(rw http.ResponseWriter, r *http.Request) {
+
+func (user *Users) updateUser(rw http.ResponseWriter, r *http.Request) {
 
 }
-
-func (user *User) updateUser(rw http.ResponseWriter, r *http.Request) {
-
-}
-func (user *User) deleteUser(rw http.ResponseWriter, r *http.Request) {
+func (user *Users) deleteUser(rw http.ResponseWriter, r *http.Request) {
 
 }
