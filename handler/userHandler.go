@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -59,6 +60,7 @@ func (user *Users) getUser(rw http.ResponseWriter, r *http.Request, id int) {
 	u, err := query.GetUser(user.Ctx, int64(id))
 	if err != nil {
 		http.Error(rw, "USER NOT FOUND", http.StatusNotFound)
+		return
 	}
 	encoder.Encode(u)
 }
@@ -68,11 +70,29 @@ func (user *Users) getUsers(rw http.ResponseWriter, r *http.Request) {
 	u, err := query.GetUsers(user.Ctx)
 	if err != nil {
 		http.Error(rw, "USER NOT FOUND", http.StatusNotFound)
+		return
 	}
 	encoder.Encode(u)
 
 }
 func (user *Users) createUser(rw http.ResponseWriter, r *http.Request) {
+	var u db.CreateUserParams
+	query := db.New(user.Connection)
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&u)
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(rw, "BAD DATA SENT!", http.StatusBadRequest)
+		return
+	}
+	newUser, err := query.CreateUser(user.Ctx, u)
+
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	encoder := json.NewEncoder(rw)
+	encoder.Encode(newUser)
 }
 
 func (user *Users) updateUser(rw http.ResponseWriter, r *http.Request) {
