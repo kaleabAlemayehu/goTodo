@@ -63,6 +63,14 @@ func (user *Users) getUser(rw http.ResponseWriter, r *http.Request, id int) {
 	encoder.Encode(u)
 }
 func (user *Users) getUsers(rw http.ResponseWriter, r *http.Request) {
+	query := db.New(user.Connection)
+	encoder := json.NewEncoder(rw)
+	u, err := query.GetUsers(user.Ctx)
+	if err != nil {
+		http.Error(rw, "USER NOT FOUND", http.StatusNotFound)
+	}
+	encoder.Encode(u)
+
 }
 func (user *Users) createUser(rw http.ResponseWriter, r *http.Request) {
 }
