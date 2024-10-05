@@ -60,8 +60,20 @@ func (user *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	}
 	if r.Method == http.MethodDelete {
-		user.deleteUser(rw, r)
+		reg := regexp.MustCompile(`/([0-9]+)`)
+		g := reg.FindAllStringSubmatch(r.URL.Path, -1)
+		if len(g) != 0 {
+			id, err := strconv.Atoi(g[0][1])
+			if err != nil {
+				panic(err)
+			}
+			user.deleteUser(rw, r, int64(id))
+		} else {
+			http.Error(rw, "Bad Request!", http.StatusBadRequest)
+		}
+
 		return
+
 	}
 	rw.WriteHeader(http.StatusMethodNotAllowed)
 }
@@ -127,6 +139,22 @@ func (user *Users) updateUser(rw http.ResponseWriter, r *http.Request, id int64)
 	}
 
 }
-func (user *Users) deleteUser(rw http.ResponseWriter, r *http.Request) {
+func (user *Users) deleteUser(rw http.ResponseWriter, r *http.Request, id int64) {
 
+	query := db.New(user.Connection)
+	u, err := query.DeleteUser(user.Ctx, id)
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	encoder := json.NewEncoder(rw)
+	err = encoder.Encode(u)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
