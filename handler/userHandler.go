@@ -1,23 +1,41 @@
 package handler
 
 import (
+	"context"
+	"encoding/json"
 	"log"
 	"net/http"
+	"regexp"
+	"strconv"
 
-	"github.com/kaleabAlemayehu/goTodo/data"
+	"github.com/jackc/pgx/v5"
+	"github.com/kaleabAlemayehu/goTodo/db"
 )
 
 type Users struct {
-	Logger *log.Logger
+	Ctx        context.Context
+	Connection *pgx.Conn
+	Logger     *log.Logger
 }
 
-func NewUser(l *log.Logger) *Users {
-	return &Users{l}
+func NewUser(ctx context.Context, con *pgx.Conn, l *log.Logger) *Users {
+	return &Users{ctx, con, l}
 }
 
 func (user *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		user.getAllUsers(rw, r)
+		reg := regexp.MustCompile(`/([0-9]+)`)
+		g := reg.FindAllStringSubmatch(r.URL.Path, -1)
+		if len(g) != 0 {
+			id, err := strconv.Atoi(g[0][1])
+			if err != nil {
+				panic(err)
+			}
+			user.getUser(rw, r, id)
+		} else {
+			user.getUsers(rw, r)
+		}
+
 		return
 	}
 	if r.Method == http.MethodPost {
@@ -35,22 +53,18 @@ func (user *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(http.StatusMethodNotAllowed)
 }
 
-func (user *Users) getAllUsers(rw http.ResponseWriter, r *http.Request) {
-	users := data.GetUsers()
-
-	err := users.ToJson(rw)
+func (user *Users) getUser(rw http.ResponseWriter, r *http.Request, id int) {
+	query := db.New(user.Connection)
+	encoder := json.NewEncoder(rw)
+	u, err := query.GetUser(user.Ctx, int64(id))
 	if err != nil {
-		http.Error(rw, "Unable to Marshal to json", http.StatusInternalServerError)
+		http.Error(rw, "USER NOT FOUND", http.StatusNotFound)
 	}
+	encoder.Encode(u)
+}
+func (user *Users) getUsers(rw http.ResponseWriter, r *http.Request) {
 }
 func (user *Users) createUser(rw http.ResponseWriter, r *http.Request) {
-	newUser := &data.User{}
-	err := newUser.FromJson(r.Body)
-
-	if err != nil {
-		http.Error(rw, "Unable to Unmarshal from json", http.StatusBadRequest)
-	}
-	data.AddUser(newUser)
 }
 
 func (user *Users) updateUser(rw http.ResponseWriter, r *http.Request) {
