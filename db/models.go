@@ -8,6 +8,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Todo struct {
+	ID           int64
+	UserID       pgtype.Int4
+	Title        string
+	Content      string
+	StartingTime pgtype.Timestamp
+	EndingTime   pgtype.Timestamp
+	CreatedAt    pgtype.Timestamp
+	UpdatedAt    pgtype.Timestamp
+}
+
 type User struct {
 	ID        int64
 	Username  string

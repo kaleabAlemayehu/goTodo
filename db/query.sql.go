@@ -7,7 +7,48 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const createTodo = `-- name: CreateTodo :one
+INSERT INTO todos (
+user_id, title, content, starting_time, ending_time
+) VALUES (
+  $1, $2, $3, $4, $5
+)
+RETURNING id, user_id, title, content, starting_time, ending_time, created_at, updated_at
+`
+
+type CreateTodoParams struct {
+	UserID       pgtype.Int4
+	Title        string
+	Content      string
+	StartingTime pgtype.Timestamp
+	EndingTime   pgtype.Timestamp
+}
+
+func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) (Todo, error) {
+	row := q.db.QueryRow(ctx, createTodo,
+		arg.UserID,
+		arg.Title,
+		arg.Content,
+		arg.StartingTime,
+		arg.EndingTime,
+	)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Title,
+		&i.Content,
+		&i.StartingTime,
+		&i.EndingTime,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
@@ -38,6 +79,28 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteTodo = `-- name: DeleteTodo :one
+DELETE FROM todos
+WHERE id = $1
+RETURNING id, user_id, title, content, starting_time, ending_time, created_at, updated_at
+`
+
+func (q *Queries) DeleteTodo(ctx context.Context, id int64) (Todo, error) {
+	row := q.db.QueryRow(ctx, deleteTodo, id)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Title,
+		&i.Content,
+		&i.StartingTime,
+		&i.EndingTime,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const deleteUser = `-- name: DeleteUser :one
 DELETE FROM users
 WHERE id = $1
@@ -56,6 +119,60 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) (User, error) {
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const getTodo = `-- name: GetTodo :one
+SELECT id, user_id, title, content, starting_time, ending_time, created_at, updated_at FROM todos
+WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetTodo(ctx context.Context, id int64) (Todo, error) {
+	row := q.db.QueryRow(ctx, getTodo, id)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Title,
+		&i.Content,
+		&i.StartingTime,
+		&i.EndingTime,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTodos = `-- name: GetTodos :many
+SELECT id, user_id, title, content, starting_time, ending_time, created_at, updated_at FROM todos
+`
+
+func (q *Queries) GetTodos(ctx context.Context) ([]Todo, error) {
+	rows, err := q.db.Query(ctx, getTodos)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Todo
+	for rows.Next() {
+		var i Todo
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Title,
+			&i.Content,
+			&i.StartingTime,
+			&i.EndingTime,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUser = `-- name: GetUser :one
@@ -108,6 +225,40 @@ func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const listTodos = `-- name: ListTodos :many
+SELECT id, user_id, title, content, starting_time, ending_time, created_at, updated_at FROM todos
+ORDER BY title
+`
+
+func (q *Queries) ListTodos(ctx context.Context) ([]Todo, error) {
+	rows, err := q.db.Query(ctx, listTodos)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Todo
+	for rows.Next() {
+		var i Todo
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Title,
+			&i.Content,
+			&i.StartingTime,
+			&i.EndingTime,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUsers = `-- name: ListUsers :many
 SELECT id, username, email, password, created_at, updated_at FROM users
 ORDER BY username
@@ -138,6 +289,34 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateTodo = `-- name: UpdateTodo :exec
+UPDATE todos
+  set title = $2,
+  content = $3,
+  starting_time = $4,
+  ending_time = $5
+WHERE id = $1
+`
+
+type UpdateTodoParams struct {
+	ID           int64
+	Title        string
+	Content      string
+	StartingTime pgtype.Timestamp
+	EndingTime   pgtype.Timestamp
+}
+
+func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) error {
+	_, err := q.db.Exec(ctx, updateTodo,
+		arg.ID,
+		arg.Title,
+		arg.Content,
+		arg.StartingTime,
+		arg.EndingTime,
+	)
+	return err
 }
 
 const updateUser = `-- name: UpdateUser :exec
