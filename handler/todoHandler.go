@@ -45,7 +45,20 @@ func (todo *Todo) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == http.MethodPut {
-		todo.updateTodo(rw, r)
+		reg := regexp.MustCompile(`/([0-9]+)`)
+		g := reg.FindAllStringSubmatch(r.URL.Path, -1)
+		if len(g) != 0 {
+			id, err := strconv.Atoi(g[0][1])
+			if err != nil {
+				todo.Logger.Println(err)
+				http.Error(rw, "Parameter is bad!", http.StatusBadRequest)
+				return
+			}
+			todo.updateTodo(rw, r, int64(id))
+		} else {
+			http.Error(rw, "Parameter is bad!", http.StatusBadRequest)
+		}
+
 		return
 	}
 	if r.Method == http.MethodDelete {
@@ -109,8 +122,23 @@ func (todo *Todo) createTodo(rw http.ResponseWriter, r *http.Request) {
 	encoder.Encode(newTodo)
 	return
 }
-func (todo *Todo) updateTodo(rw http.ResponseWriter, r *http.Request) {
-
+func (todo *Todo) updateTodo(rw http.ResponseWriter, r *http.Request, id int64) {
+	var t db.UpdateTodoParams
+	query := db.New(todo.Connection)
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&t)
+	if err != nil {
+		todo.Logger.Println(err)
+		http.Error(rw, "Body content is Bad!", http.StatusBadRequest)
+		return
+	}
+	t.ID = id
+	err = query.UpdateTodo(todo.Ctx, t)
+	if err != nil {
+		todo.Logger.Println(err)
+		http.Error(rw, "Unable to update todo!", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (todo *Todo) deleteTodo(rw http.ResponseWriter, r *http.Request) {
