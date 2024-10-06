@@ -56,6 +56,16 @@ func (todo *Todo) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (todo *Todo) getTodo(rw http.ResponseWriter, r *http.Request, id int64) {
+	query := db.New(todo.Connection)
+	t, err := query.GetTodo(todo.Ctx, id)
+	if err != nil {
+		todo.Logger.Println(err)
+		http.Error(rw, "Unable to fetch Todo!", http.StatusNotFound)
+		return
+	}
+	encoder := json.NewEncoder(rw)
+	encoder.Encode(t)
+	return
 }
 
 func (todo *Todo) getAllTodos(rw http.ResponseWriter, r *http.Request) {
