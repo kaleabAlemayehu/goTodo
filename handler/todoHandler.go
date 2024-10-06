@@ -64,12 +64,29 @@ func (todo *Todo) getTodo(rw http.ResponseWriter, r *http.Request, id int64) {
 		return
 	}
 	encoder := json.NewEncoder(rw)
-	encoder.Encode(t)
+	err = encoder.Encode(t)
+	if err != nil {
+		todo.Logger.Println(err)
+		http.Error(rw, "unable to write todo!", http.StatusInternalServerError)
+	}
 	return
 }
 
 func (todo *Todo) getAllTodos(rw http.ResponseWriter, r *http.Request) {
-
+	query := db.New(todo.Connection)
+	t, err := query.GetTodos(todo.Ctx)
+	if err != nil {
+		todo.Logger.Println(err)
+		http.Error(rw, "Unable to fetch Todos!", http.StatusNotFound)
+		return
+	}
+	encoder := json.NewEncoder(rw)
+	err = encoder.Encode(t)
+	if err != nil {
+		todo.Logger.Println(err)
+		http.Error(rw, "unable to write todos!", http.StatusInternalServerError)
+	}
+	return
 }
 
 func (todo *Todo) createTodo(rw http.ResponseWriter, r *http.Request) {
