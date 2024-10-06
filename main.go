@@ -14,7 +14,7 @@ func main() {
 	sm := http.NewServeMux()
 	ctx, conn := helpers.DBConnect()
 	user := handler.NewUser(ctx, conn, l)
-	todo := handler.NewTodo(l)
+	todo := handler.NewTodo(ctx, conn, l)
 	sm.Handle("/user/", user)
 	sm.Handle("/todo/", todo)
 	http.ListenAndServe(":9000", sm)
