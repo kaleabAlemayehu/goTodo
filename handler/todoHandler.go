@@ -62,7 +62,20 @@ func (todo *Todo) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == http.MethodDelete {
-		todo.deleteTodo(rw, r)
+		reg := regexp.MustCompile(`/([0-9]+)`)
+		g := reg.FindAllStringSubmatch(r.URL.Path, -1)
+		if len(g) != 0 {
+			id, err := strconv.Atoi(g[0][1])
+			if err != nil {
+				todo.Logger.Println(err)
+				http.Error(rw, "Parameter is bad!", http.StatusBadRequest)
+				return
+			}
+			todo.deleteTodo(rw, r, int64(id))
+		} else {
+			http.Error(rw, "Parameter is bad!", http.StatusBadRequest)
+		}
+
 		return
 	}
 	rw.WriteHeader(http.StatusMethodNotAllowed)
@@ -82,7 +95,6 @@ func (todo *Todo) getTodo(rw http.ResponseWriter, r *http.Request, id int64) {
 		todo.Logger.Println(err)
 		http.Error(rw, "unable to write todo!", http.StatusInternalServerError)
 	}
-	return
 }
 
 func (todo *Todo) getAllTodos(rw http.ResponseWriter, r *http.Request) {
@@ -99,7 +111,6 @@ func (todo *Todo) getAllTodos(rw http.ResponseWriter, r *http.Request) {
 		todo.Logger.Println(err)
 		http.Error(rw, "unable to write todos!", http.StatusInternalServerError)
 	}
-	return
 }
 
 func (todo *Todo) createTodo(rw http.ResponseWriter, r *http.Request) {
@@ -120,7 +131,6 @@ func (todo *Todo) createTodo(rw http.ResponseWriter, r *http.Request) {
 	}
 	encoder := json.NewEncoder(rw)
 	encoder.Encode(newTodo)
-	return
 }
 func (todo *Todo) updateTodo(rw http.ResponseWriter, r *http.Request, id int64) {
 	var t db.UpdateTodoParams
@@ -141,6 +151,19 @@ func (todo *Todo) updateTodo(rw http.ResponseWriter, r *http.Request, id int64) 
 	}
 }
 
-func (todo *Todo) deleteTodo(rw http.ResponseWriter, r *http.Request) {
+func (todo *Todo) deleteTodo(rw http.ResponseWriter, r *http.Request, id int64) {
+	query := db.New(todo.Connection)
+	t, err := query.DeleteTodo(todo.Ctx, id)
+	if err != nil {
+		todo.Logger.Println(err)
+		http.Error(rw, "Unable to delete todo!", http.StatusBadRequest)
+		return
+	}
+	encoder := json.NewEncoder(rw)
+	err = encoder.Encode(t)
+	if err != nil {
+		todo.Logger.Println(err)
+		http.Error(rw, "Unable to send todo!", http.StatusInternalServerError)
+	}
 
 }
