@@ -9,7 +9,7 @@ import (
 
 func DBConnect() (context.Context, *pgx.Conn) {
 	ctx := context.Background()
-	conn, err := pgx.Connect(ctx, "postgres://neocipher:kaleab@localhost:5432/neocipher")
+	conn, err := pgx.Connect(ctx, "postgres://cipher:kaleab@localhost:5432/cipher")
 	if err != nil {
 		panic(err)
 	}

@@ -55,9 +55,7 @@ func (user *Users) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(rw, "Bad Request!", http.StatusBadRequest)
 		}
-
 		return
-
 	}
 	if r.Method == http.MethodDelete {
 		reg := regexp.MustCompile(`/([0-9]+)`)

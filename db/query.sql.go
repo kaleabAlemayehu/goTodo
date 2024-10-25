@@ -21,11 +21,11 @@ RETURNING id, user_id, title, content, starting_time, ending_time, created_at, u
 `
 
 type CreateTodoParams struct {
-	UserID       pgtype.Int4
-	Title        string
-	Content      string
-	StartingTime pgtype.Timestamp
-	EndingTime   pgtype.Timestamp
+	UserID       pgtype.Int4      `json:"userId"`
+	Title        string           `json:"title"`
+	Content      string           `json:"content"`
+	StartingTime pgtype.Timestamp `json:"startingTime"`
+	EndingTime   pgtype.Timestamp `json:"endingTime"`
 }
 
 func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) (Todo, error) {
@@ -60,9 +60,9 @@ RETURNING id, username, email, password, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	Username string
-	Email    string
-	Password string
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -301,11 +301,11 @@ WHERE id = $1
 `
 
 type UpdateTodoParams struct {
-	ID           int64
-	Title        string
-	Content      string
-	StartingTime pgtype.Timestamp
-	EndingTime   pgtype.Timestamp
+	ID           int64            `json:"id"`
+	Title        string           `json:"title"`
+	Content      string           `json:"content"`
+	StartingTime pgtype.Timestamp `json:"startingTime"`
+	EndingTime   pgtype.Timestamp `json:"endingTime"`
 }
 
 func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) error {
@@ -328,10 +328,10 @@ WHERE id = $1
 `
 
 type UpdateUserParams struct {
-	ID       int64
-	Username string
-	Email    string
-	Password string
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {

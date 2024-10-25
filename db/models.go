@@ -9,21 +9,21 @@ import (
 )
 
 type Todo struct {
-	ID           int64
-	UserID       pgtype.Int4
-	Title        string
-	Content      string
-	StartingTime pgtype.Timestamp
-	EndingTime   pgtype.Timestamp
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
+	ID           int64            `json:"id"`
+	UserID       pgtype.Int4      `json:"userId"`
+	Title        string           `json:"title"`
+	Content      string           `json:"content"`
+	StartingTime pgtype.Timestamp `json:"startingTime"`
+	EndingTime   pgtype.Timestamp `json:"endingTime"`
+	CreatedAt    pgtype.Timestamp `json:"createdAt"`
+	UpdatedAt    pgtype.Timestamp `json:"updatedAt"`
 }
 
 type User struct {
-	ID        int64
-	Username  string
-	Email     string
-	Password  string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
+	ID        int64            `json:"id"`
+	Username  string           `json:"username"`
+	Email     string           `json:"email"`
+	Password  string           `json:"password"`
+	CreatedAt pgtype.Timestamp `json:"createdAt"`
+	UpdatedAt pgtype.Timestamp `json:"updatedAt"`
 }
